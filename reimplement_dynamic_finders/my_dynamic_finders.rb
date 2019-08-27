@@ -8,13 +8,13 @@ module MyDynamicFinders
   def method_missing(name, *args)
     name = name.to_s
     if name.start_with?('find_by_')
-      attr_names = name.gsub(/\Afind_by_/, '').gsub(/!\z/, '').split('_and_')
+      attr_names = name.delete_prefix('find_by_').delete_suffix('!').split('_and_')
 
-      conditions = attr_names.map.each_with_index { |attr, index| [attr, args[index]] }.to_h
+      conditions = attr_names.zip(args)
 
       select_data = $DATABASE.find do |data|
-        attr_names.all? do |attr|
-          data.public_send(attr) == conditions[attr]
+        conditions.all? do |key, value|
+          data.public_send(key) == value
         end
       end
 
